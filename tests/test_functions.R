@@ -16,14 +16,12 @@ assert <- function(desc, expr) {
 }
 
 # ------------------------------------------
-# ELO math functions (defined here to avoid
-# triggering the full pipeline in elo_ratings.R)
+# Source shared utilities
 # ------------------------------------------
+source("utils.R")
 
-calc_expected <- function(elo_diff) {
-  1 / (1 + 10^(-elo_diff / 400))
-}
-
+# Also need calc_mov_mult and revert_elos from elo_ratings.R
+# These are ELO-specific, so we define them here to match elo_ratings.R
 calc_mov_mult <- function(point_diff, winner_elo, loser_elo) {
   log(abs(point_diff) + 1) * (2.2 / ((winner_elo - loser_elo) * 0.001 + 2.2))
 }
@@ -33,7 +31,7 @@ revert_elos <- function(elo_vector, reversion = 0.20, initial = 1500) {
 }
 
 # ------------------------------------------
-# Tests: calc_expected
+# Tests: calc_expected (from utils.R)
 # ------------------------------------------
 cat("calc_expected:\n")
 
@@ -90,59 +88,46 @@ assert("vector input works", {
 })
 
 # ------------------------------------------
-# Tests: name_map consistency
+# Tests: convert_name (from utils.R)
 # ------------------------------------------
-cat("\nname_map consistency:\n")
+cat("\nconvert_name:\n")
 
-# Source just the name_map from elo_ratings.R
-elo_env <- new.env()
-tryCatch({
-  lines <- readLines("elo_ratings.R")
-  start <- grep("^name_map <- c\\(", lines)
-  end <- grep("^\\)", lines)
-  end <- end[end > start[1]][1]
-  eval(parse(text = lines[start:end]), envir = elo_env)
-}, error = function(e) NULL)
+assert("known ESPN name maps to NCAA name",
+       convert_name("Army Black Knights") == "U.S. Military Academy")
 
-rpi_env <- new.env()
-tryCatch({
-  lines <- readLines("rpi_calculator.R")
-  start <- grep("^name_map <- c\\(", lines)
-  end <- grep("^\\)", lines)
-  end <- end[end > start[1]][1]
-  eval(parse(text = lines[start:end]), envir = rpi_env)
-}, error = function(e) NULL)
+assert("unknown name passes through unchanged",
+       convert_name("Some Unknown Team") == "Some Unknown Team")
 
-pred_env <- new.env()
-tryCatch({
-  lines <- readLines("predicting_the_next_weeks_games.R")
-  start <- grep("^name_map <- c\\(", lines)
-  end <- grep("^\\)", lines)
-  end <- end[end > start[1]][1]
-  eval(parse(text = lines[start:end]), envir = pred_env)
-}, error = function(e) NULL)
+assert("Syracuse maps correctly",
+       convert_name("Syracuse Orange") == "Syracuse University")
 
-if (exists("name_map", envir = elo_env) && exists("name_map", envir = rpi_env)) {
-  assert("elo_ratings.R and rpi_calculator.R name_maps match",
-         identical(sort(elo_env$name_map), sort(rpi_env$name_map)))
-} else {
-  cat("  SKIP: could not parse name_maps from source files\n")
-}
+# ------------------------------------------
+# Tests: name_map (from utils.R)
+# ------------------------------------------
+cat("\nname_map:\n")
 
-if (exists("name_map", envir = elo_env) && exists("name_map", envir = pred_env)) {
-  assert("elo_ratings.R and predicting_the_next_weeks_games.R name_maps match",
-         identical(sort(elo_env$name_map), sort(pred_env$name_map)))
-} else {
-  cat("  SKIP: could not parse name_maps from source files\n")
-}
+assert("no duplicate ESPN names",
+       !any(duplicated(names(name_map))))
 
-if (exists("name_map", envir = elo_env)) {
-  assert("no duplicate ESPN names in name_map",
-         !any(duplicated(names(elo_env$name_map))))
+assert("no duplicate NCAA names",
+       !any(duplicated(unname(name_map))))
 
-  assert("no duplicate NCAA names in name_map",
-         !any(duplicated(unname(elo_env$name_map))))
-}
+assert("all ESPN names are non-empty strings",
+       all(nchar(names(name_map)) > 0))
+
+assert("all NCAA names are non-empty strings",
+       all(nchar(unname(name_map)) > 0))
+
+# ------------------------------------------
+# Tests: constants (from utils.R)
+# ------------------------------------------
+cat("\nconstants:\n")
+
+assert("INITIAL_ELO is 1500",
+       INITIAL_ELO == 1500)
+
+assert("HFA is 20",
+       HFA == 20)
 
 # ------------------------------------------
 # Summary
