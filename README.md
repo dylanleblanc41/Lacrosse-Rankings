@@ -38,10 +38,10 @@ Verision 0.2:
 ## ELO Breakdown
 
 - The ELO formula was based on 538's ELO rating system for the NFL and the following inputs were determined to provide the best accuracy:
-      1) k-factor = 30
-      2) home field advantage = 20
-      3) initial elo = 1500
-      4) reversion = 1/5
+      - k-factor = 30
+      - home field advantage = 20
+      - initial elo = 1500
+      - reversion = 1/5
 
 ## Combine Final Ranking
 
