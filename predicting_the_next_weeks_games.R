@@ -1,7 +1,3 @@
-getwd()
-setwd("/Users/dylanleblanc/Desktop/Lacrosse Rankings Project")
-dir()
-
 # ===== NCAA LACROSSE WEEKLY PREDICTIONS =====
 library(httr)
 library(jsonlite)
